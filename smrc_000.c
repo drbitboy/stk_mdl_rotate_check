@@ -1,7 +1,7 @@
 /*
   Usage:
 
-    ./smrc_NNN.c meta_kernel.tm [--utcest=2019-01-01T05:33:00]
+    [ABCORR=LT] ./smrc_NNN.c meta_kernel.tm [--utcest=2019-01-01T05:33:00] [--abcorr=LT]
 
   Compile:
 
@@ -19,6 +19,7 @@
 
 
 /**********************************************************************/
+/* Print vector [Xcomponent, Ycomponent, Zcomponent] */
 void
 printVec3(SpiceDouble* v, char* sPfxArg, char* sSfxArg, char* sFmtArg) {
 char* sFmt = sFmtArg ? sFmtArg : "%.12lg";
@@ -35,6 +36,10 @@ int i;
 
 
 /**********************************************************************/
+/* Print matrix [vector,
+                 vector,
+                 vector]]
+ */
 void
 printMtx3x3(SpiceDouble* mtx0, char* sLabel, char* sFmtArg) {
 int i;
@@ -63,31 +68,43 @@ SpiceDouble refval = 0.0;
 SpiceDouble spd = spd_c();     /* s/d */
 SpiceDouble dpr = dpr_c();     /* deg/radian */
 SpiceDouble step = 3600;       /* Step size = 1h */
-SpiceChar* abcorr = getenv("ABCORR") ? getenv("ABCORR") : "LT";
+SpiceChar* sAbcorr = "LT";
 SpiceChar* sTarget = { "2486958" };
 SpiceChar* sSc = { "-98" };
 
   for (iArg=1; iArg<argc; ++iArg) {
 
+    /* Process command-line arguments */
     pArg = argv[iArg];
 
     if (!strncmp("--utcest=",pArg,9)) {
+      /* UTC estimate for TCA */
       utcEst = pArg + 9;
       fprintf(stdout, "Using [%s] as estimate for TCA\n", utcEst);
       continue;
     }
 
-    /* Default:  assume SPICE kernel to be FURNSHed */
+    if (!strncmp("--abcorr=",pArg,9)) {
+      /* Aberration correction */
+      sAbcorr = pArg + 9;
+      fprintf(stdout, "Using [%s] for aberration correction\n", utcEst);
+      continue;
+    }
+
+    /* Default:  assume argument is SPICE kernel to be FURNSHed */
     furnsh_c(argv[iArg]);
   }
 
+  /* Convert UTC to ET, set GF search window to ET +/-5d,
+   * find TCA (Time of Closest Approach)
+   */
+   
   str2et_c(utcEst,&etEst);
-
   wninsd_c(etEst - 5*spd, etEst + 5*spd, &cnfine);
-
-  gfdist_c( sTarget, abcorr, sSc, "ABSMIN", refval
+  gfdist_c( sTarget, sAbcorr, sSc, "ABSMIN", refval
           , adjust, step, NINTVL, &cnfine, &result);
 
+  /* there must be one window in the result */
   if (1 != wncard_c(&result)) return 1;
 
   {
@@ -102,26 +119,40 @@ SpiceChar* sSc = { "-98" };
   SpiceDouble mtxJ2kToUncert[3][3];
   SpiceChar utcTCA[50];
 
+    /* Fetch the ETs from the result window */
     wnfetd_c( &result, 0, &etStart, &etStop);
 
-    spkezr_c(sTarget, etStart, "J2000", abcorr, sSc, stScToTarget, &lt);
+    /* Calculate target state wrt spacecraft at TCA */
+    spkezr_c(sTarget, etStart, "J2000", sAbcorr, sSc, stScToTarget, &lt);
 
+    /* Invert state to get spacecraft position and velocity wrt target */
     vminus_c(stScToTarget, scPos);
     vminus_c(stScToTarget+3, scVel);
 
+    /* B-norm vector is Position cross velocity */
     vcrss_c(scPos, scVel, vBnorm);
+
+    /* Create matrix:  align X with velocity; +Y  with B-norm.
+     * +Z will align  with B-mag i.e. S/C position vector in B-plane
+     */
     twovec_c(scVel, 1, vBnorm, 2, mtxJ2kToUncert);
 
+    /* Convert matrix to Euler angles, scale to degrees */
     m2eul_c(mtxJ2kToUncert, 1, 2, 3, rotXYZ+0, rotXYZ+1, rotXYZ+2);
     vscl_c(dpr, rotXYZ, rotXYZ);
 
+    /* Convert TCA ET to UTC */
     et2utc_c(etStart, "ISOC", 6, sizeof utcTCA, utcTCA);
-    fprintf(stdout, "%s; tErr=%lgs; pos-Vel_AngleErr = %.7lgdeg\n"
+
+    /* Output result; errors should be zero */
+    fprintf(stdout, "TCA=[%s]; ABCORR=[%s]; tErr=[%lgs]; TCA-Pos-Vel_AngleErr=%.7lgdeg (should be zero)\n"
            , utcTCA
+           , sAbcorr
            , etStop-etStart
            , 90.0 - (dpr * vsep_c(scPos, scVel))
            );
 
+    /* Output Matrix and Euler angles */
     printMtx3x3(mtxJ2kToUncert[0], "\nMTX[J2000=>ABC]", 0);
     printVec3(rotXYZ, "\nRotateXYZ:", "deg\n\n", 0);
   }
