@@ -7,7 +7,7 @@ This is in support of the New Horizons (NH) mission flyby of Kuiper Belt Object 
 
 ### Manifest
 
-mu69_alt_2sig.mdl - AGI/STK MDL file; shape model for visualization in AGI/STK application of uncertainties around MU69; ellipsoid-like surface of 2-sigma uncertainty volume for the NH flyby of Mu69.  +X axis is Time Of Flight uncertainty (TOF; downtrack); +Y axis is B-normal uncertainty (B-norm; normal to directory plane; cross-product [B-mag X TOF]); +Z axis is B-magnitude uncertainty (B-mag; in direction of MU69=>NH at Time of Closest Approach (TCA)) 
+__mu69_alt_2sig.mdl__ - AGI/STK MDL file; shape model for visualization in AGI/STK application of uncertainties around MU69; ellipsoid-like surface of 2-sigma uncertainty volume for the NH flyby of Mu69.  +X axis is Time Of Flight uncertainty (TOF; downtrack); +Y axis is B-normal uncertainty (B-norm; normal to directory plane; cross-product [B-mag X TOF]); +Z axis is B-magnitude uncertainty (B-mag; in direction of MU69=>NH at Time of Closest Approach (TCA)) 
 
 __smrc_000.c__ - source file to calculate geometry and orientation of MDL wrt J2000 reference frame; uses JPL/NAIF CSPICE library of SPICE toolkit cf. https://naif.jpl.nasa.gov/
 
