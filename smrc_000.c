@@ -145,7 +145,7 @@ SpiceChar* sSc = { "-98" };
     et2utc_c(etStart, "ISOC", 6, sizeof utcTCA, utcTCA);
 
     /* Output result; errors should be zero */
-    fprintf(stdout, "TCA=[%s]; ABCORR=[%s]; tErr=[%lgs]; TCA-Pos-Vel_AngleErr=%.7lgdeg (should be zero)\n"
+    fprintf(stdout, "TCA=[%s]; ABCORR=[%s]; tErr=[%lgs]; TCA-Pos-Vel_AngleErr=%.7lgdeg (should be ~zero)\n"
            , utcTCA
            , sAbcorr
            , etStop-etStart

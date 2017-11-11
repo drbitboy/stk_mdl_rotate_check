@@ -6,5 +6,8 @@ EXES=smrc_000
 
 all: $(EXES)
 
+go: smrc_000 meta_kernel.tm
+	./$< meta_kernel.tm
+
 clean:
 	$(RM) $(EXES)
