@@ -5,7 +5,7 @@ In the end, the problem was that the J2000-relative MDL needed its attitude set 
 
 This is in support of the New Horizons (NH) mission flyby of Kuiper Belt Object (KBO) MU69 ca. 2019-JAN-01.
 
-###Manifest
+### Manifest
 
 mu69_alt_2sig.mdl - AGI/STK MDL file; shape model for visualization in AGI/STK application of uncertainties around MU69; ellipsoid-like surface of 2-sigma uncertainty volume for the NH flyby of Mu69.  +X axis is Time Of Flight uncertainty (TOF; downtrack); +Y axis is B-normal uncertainty (B-norm; normal to directory plane; cross-product [B-mag X TOF]); +Z axis is B-magnitude uncertainty (B-mag; in direction of MU69=>NH) 
 
